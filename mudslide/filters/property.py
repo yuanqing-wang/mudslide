@@ -1,5 +1,6 @@
 import abc
 from ast import Not
+import random
 from rdkit import Chem
 from functools import partial
 
@@ -16,11 +17,11 @@ class Property(abc.ABC):
         raise NotImplementedError
     
     def __str__(self) -> str:
-        return self._str[0]
+        return random.choice(self._str)
     
     __repr__ = __str__
 
-class NumberOf(Property):
+class NumberOfElement(Property):
     """Describe the number of elements in a molecule. 
     
     Parameters
@@ -28,9 +29,6 @@ class NumberOf(Property):
     element : str
         The element to be counted.
 
-    Examples
-    --------
-    >>> import mudslide
     """
     def __init__(self, element: str):
         self.element = element
@@ -80,13 +78,33 @@ class NumberOf(Property):
             ]
         )
     
-NumberOfCarbons = partial(NumberOf, "C")
-NumberOfNitrogens = partial(NumberOf, "N")
-NumberOfOxygens = partial(NumberOf, "O")
-NumberOfFluorines = partial(NumberOf, "F")
-NumberOfPhosphoruses = partial(NumberOf, "P")
-NumberOfSulfurs = partial(NumberOf, "S")
-NumberOfChlorines = partial(NumberOf, "Cl")
-NumberOfBromines = partial(NumberOf, "Br")
-NumberOfIodines = partial(NumberOf, "I")
+NumberOfCarbons = partial(NumberOfElement, "C")
+NumberOfNitrogens = partial(NumberOfElement, "N")
+NumberOfOxygens = partial(NumberOfElement, "O")
+NumberOfFluorines = partial(NumberOfElement, "F")
+NumberOfPhosphoruses = partial(NumberOfElement, "P")
+NumberOfSulfurs = partial(NumberOfElement, "S")
+NumberOfChlorines = partial(NumberOfElement, "Cl")
+NumberOfBromines = partial(NumberOfElement, "Br")
+NumberOfIodines = partial(NumberOfElement, "I")
+
+class NumberOfRings(Property):
+    """Describe the number of rings in a molecule. """
+    @property
+    def _str(self):
+        return [
+            "number of rings",
+            "number of ring",
+            "number of cycles",
+            "number of cycle",
+            "ring",
+            "rings",
+            "cycle",
+            "cycles",
+        ]
+    
+    def __call__(self, mol: Chem.Mol) -> bool:
+        return Chem.GetSSSR(mol)
+
+
 

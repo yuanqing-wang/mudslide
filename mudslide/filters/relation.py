@@ -1,5 +1,6 @@
 import abc
 from typing import Union
+import random
 
 class Relation(abc.ABC):
     """Base class for all relations. """
@@ -18,7 +19,7 @@ class Relation(abc.ABC):
         raise NotImplementedError
     
     def __str__(self) -> str:
-        return self._str[0]
+        return random.choice(self._str)
     
     __repr__ = __str__
     
