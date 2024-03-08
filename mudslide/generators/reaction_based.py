@@ -4,5 +4,8 @@ class Reaction(Generator):
     """Perform a reaction using crem. """
     def _str(self):
         return [
-            "reaction",
+            "React",
+            "Generate with reactions",
         ]
+    
+

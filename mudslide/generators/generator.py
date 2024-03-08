@@ -1,4 +1,5 @@
 import abc
+import random
 
 class Generator(abc.ABC):
     """Base class for all generators. """
@@ -7,8 +8,11 @@ class Generator(abc.ABC):
         """Generate a molecule. """
         raise NotImplementedError
 
-    @abc.abstractmethod
-    def __str__(self) -> str:
+    @abc.abstractproperty
+    def _str(self) -> str:
         raise NotImplementedError
+    
+    def __str__(self):
+        return random.choice(self._str)
 
     __repr__ = __str__

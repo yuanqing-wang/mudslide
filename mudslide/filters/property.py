@@ -3,6 +3,7 @@ from ast import Not
 import random
 from rdkit import Chem
 from functools import partial
+from ..utils import smilse2mol
 
 class Property(abc.ABC):
     """Base class for all properties. """
@@ -68,6 +69,7 @@ class NumberOfElement(Property):
             for element in self._element_name_mapping[self.element]
         ]
     
+    @smilse2mol
     def __call__(self, mol: Chem.Mol) -> bool:
         return len(
             [
@@ -103,6 +105,7 @@ class NumberOfRings(Property):
             "cycles",
         ]
     
+    @smilse2mol
     def __call__(self, mol: Chem.Mol) -> bool:
         return Chem.GetSSSR(mol)
 
