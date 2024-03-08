@@ -1,9 +1,11 @@
-from .generator import Generator
+import random
 from typing import Optional
 import os
 from pathlib import Path
 from crem import crem
 import requests
+from .generator import Generator
+from ..utils import smilse2mol
 
 DB_URL = """http://www.qsar4u.com/files/cremdb/replacements02_sc2.5.db.gz"""
 DB_NAME = os.path.join(
@@ -38,9 +40,11 @@ class Grow(CremGenerator):
     >>> smi = grow(mol)
     >>> print(smi)
     """
+    @smilse2mol
     def __call__(self, mol) -> str:
-        return crem.grow_mol2(mol, db_name=self.db)
+        return random.choice(crem.grow_mol2(mol, db_name=self.db))
     
+    @property
     def _str(self):
         return [
             "Grow",
@@ -57,9 +61,11 @@ class Mutate(CremGenerator):
     >>> mol = Chem.MolFromSmiles("CCO")
     >>> smi = mutate(mol)
     """
+    @smilse2mol
     def __call__(self, mol) -> str:
-        return crem.mutate_mol2(mol, db_name=self.db)
+        return random.choice(crem.mutate_mol2(mol, db_name=self.db))
     
+    @property
     def _str(self):
         return [
             "Mutate",

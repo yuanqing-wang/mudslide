@@ -2,8 +2,13 @@ import abc
 from ast import Not
 import random
 from rdkit import Chem
+from rdkit.Chem import Lipinski
 from functools import partial
 from ..utils import smilse2mol
+
+# =============================================================================
+# Base class
+# =============================================================================
 
 class Property(abc.ABC):
     """Base class for all properties. """
@@ -22,10 +27,38 @@ class Property(abc.ABC):
     
     __repr__ = __str__
 
-    @abc.abstractmethod
-    def sample(self) -> bool:
-        """Sample a reasonable property. """
+    @abc.abstractclassmethod
+    def sample(self):
+        """Sample a property. """
         raise NotImplementedError
+    
+# =============================================================================
+# Elements
+# =============================================================================
+    
+ELEMENT_NAME_MAPPING = {
+    "C": ["carbon", "carbons", "C"],
+    "N": ["nitrogen", "nitrogens", "N"],
+    "O": ["oxygen", "oxygens", "O"],
+    "F": ["fluorine", "fluorines", "F"],
+    "P": ["phosphorus", "phosphoruses", "P"],
+    "S": ["sulfur", "sulfurs", "S"],
+    "Cl": ["chlorine", "chlorines", "Cl"],
+    "Br": ["bromine", "bromines", "Br"],
+    "I": ["iodine", "iodines", "I"],
+}
+
+ELEMENT_NUMBER_MAPPING = {
+    "C": 6,
+    "N": 7,
+    "O": 8,
+    "F": 9,
+    "P": 15,
+    "S": 16,
+    "Cl": 17,
+    "Br": 35,
+    "I": 53,
+}
 
 class NumberOfElement(Property):
     """Describe the number of elements in a molecule. 
@@ -38,40 +71,12 @@ class NumberOfElement(Property):
     """
     def __init__(self, element: str):
         self.element = element
-
-    @property
-    def _element_number_mapping(self):
-        return {
-            "C": 6,
-            "N": 7,
-            "O": 8,
-            "F": 9,
-            "P": 15,
-            "S": 16,
-            "Cl": 17,
-            "Br": 35,
-            "I": 53,
-        }
-
-    @property
-    def _element_name_mapping(self):
-        return {
-            "C": ["carbon", "carbons", "C"],
-            "N": ["nitrogen", "nitrogens", "N"],
-            "O": ["oxygen", "oxygens", "O"],
-            "F": ["fluorine", "fluorines", "F"],
-            "P": ["phosphorus", "phosphoruses", "P"],
-            "S": ["sulfur", "sulfurs", "S"],
-            "Cl": ["chlorine", "chlorines", "Cl"],
-            "Br": ["bromine", "bromines", "Br"],
-            "I": ["iodine", "iodines", "I"],
-        }
     
     @property
     def _str(self):
         return [
             ("number of " + element) 
-            for element in self._element_name_mapping[self.element]
+            for element in ELEMENT_NAME_MAPPING[self.element]
         ]
     
     @smilse2mol
@@ -81,55 +86,160 @@ class NumberOfElement(Property):
                 atom for atom 
                 in mol.GetAtoms() 
                 if atom.GetAtomicNum() 
-                == self._element_number_mapping[self.element]
+                == ELEMENT_NUMBER_MAPPING[self.element]
             ]
         )
-    
-    def sample(self) -> int:
+
+    def sample(self):
         return random.randint(0, 10)
     
 NumberOfCarbons = partial(NumberOfElement, "C")
 NumberOfNitrogens = partial(NumberOfElement, "N")
 NumberOfOxygens = partial(NumberOfElement, "O")
-NumberOfFluorines = partial(NumberOfElement, "F")
-NumberOfPhosphoruses = partial(NumberOfElement, "P")
-NumberOfSulfurs = partial(NumberOfElement, "S")
-NumberOfChlorines = partial(NumberOfElement, "Cl")
-NumberOfBromines = partial(NumberOfElement, "Br")
-NumberOfIodines = partial(NumberOfElement, "I")
+_all_elements = [
+    NumberOfCarbons,
+    NumberOfNitrogens,
+    NumberOfOxygens,
+]
 
-class NumberOfRings(Property):
-    """Describe the number of rings in a molecule. """
+# =============================================================================
+# Lipinski
+# =============================================================================
+
+LIPINSKI_PROPERTIES = [
+    "HeavyAtomCount",
+    "NumAromaticRings",
+    "NumHAcceptors",
+    "NumHDonors",
+    "NumHeteroatoms",
+    "NumRotatableBonds",
+    "RingCount",
+]
+
+LIPINSKI_PROPERTIES_NAME_MAPPING = {
+    "HeavyAtomCount": [
+        "heavy atom count",
+        "heavy atom counts",
+        "heavy atoms",
+        "number of heavy atoms",
+    ],
+    "NumAromaticRings": [
+        "number of aromatic rings",
+        "aromatic ring count",
+    ],
+    "NumHAcceptors": [
+        "number of H acceptors",
+        "H acceptor count",
+        "number of hydrogen acceptors",
+        "hydrogen acceptor count",
+        "number of hydrogen bond acceptors",
+        "hydrogen bond acceptor count",
+    ],
+    "NumHDonors": [
+        "number of H donors",
+        "H donor count",
+        "number of hydrogen donors",
+        "hydrogen donor count",
+        "number of hydrogen bond donors",
+        "hydrogen bond donor count",
+    ],
+    "NumHeteroatoms": [
+        "number of heteroatoms",
+        "heteroatom count",
+    ],
+    "NumRotatableBonds": [
+        "number of rotatable bonds",
+        "rotatable bond count",
+    ],
+    "RingCount": [
+        "ring count",
+        "number of rings",
+    ],
+}
+
+class LipinskiProperty(Property):
+    """Describe the Lipinski properties of a molecule. 
+    
+    Parameters
+    ----------
+    property : str
+        The Lipinski property to be checked.
+
+    """
+    def __init__(self, property: str):
+        self.property = property
+    
+    @property
+    def _str(self):
+        return LIPINSKI_PROPERTIES_NAME_MAPPING[self.property]
+    
+    @smilse2mol
+    def __call__(self, mol: Chem.Mol) -> bool:
+        return getattr(Lipinski, self.property)(mol)
+    
+    def sample(self):
+        return random.randint(0, 10)
+
+_all_lipinski = []
+for lipinski in LIPINSKI_PROPERTIES:
+    globals()[lipinski] = partial(LipinskiProperty, lipinski)
+    _all_lipinski.append(globals()[lipinski])
+
+# =============================================================================
+# Miscaleous
+# =============================================================================
+class MolecularWeight(Property):
+    """Describe the molecular weight of a molecule. """
     @property
     def _str(self):
         return [
-            "number of rings",
-            "number of ring",
-            "number of cycles",
-            "number of cycle",
-            "ring",
-            "rings",
-            "cycle",
-            "cycles",
+            "molecular weight",
+            "weight",
+            "molecular mass",
         ]
     
     @smilse2mol
     def __call__(self, mol: Chem.Mol) -> bool:
-        return Chem.GetSSSR(mol)
+        return Chem.Descriptors.MolWt(mol)
     
-    def sample(self) -> int:
-        return random.randint(0, 10)
+    def sample(self):
+        return random.randint(0, 500)
+    
+class TPSA(Property):
+    """Describe the TPSA of a molecule. """
+    @property
+    def _str(self):
+        return [
+            "TPSA",
+            "topological polar surface area",
+        ]
+    
+    @smilse2mol
+    def __call__(self, mol: Chem.Mol) -> bool:
+        return Chem.rdMolDescriptors.CalcTPSA(mol)
+    
+    def sample(self):
+        return random.randint(0, 200)
+    
+class LogP(Property):
+    """Describe the logP of a molecule. """
+    @property
+    def _str(self):
+        return [
+            "logP",
+            "partition coefficient",
+        ]
+    
+    @smilse2mol
+    def __call__(self, mol: Chem.Mol) -> bool:
+        return Chem.Crippen.MolLogP(mol, addHs=True)
+    
+    def sample(self):
+        return random.randint(-10, 10)
 
-_all = [
-    NumberOfCarbons,
-    NumberOfNitrogens,
-    NumberOfOxygens,
-    NumberOfFluorines,
-    NumberOfPhosphoruses,
-    NumberOfSulfurs,
-    NumberOfChlorines,
-    NumberOfBromines,
-    NumberOfIodines,
-    NumberOfRings,
-]
+# =============================================================================
+# All
+# =============================================================================
+
+_all = _all_elements + _all_lipinski
 

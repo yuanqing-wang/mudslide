@@ -1,8 +1,8 @@
 from tkinter import SEPARATOR
-from typing import Optional
-from .generators import Generator
+from typing import Optional, Callable
+from .generators import Generator, sample_fragment, sample_reaction
 from .generators.fragment_based import CremGenerator
-from .filters import Clause
+from .filters import Clause, sample as sample_clause
 
 CONJUNCTION = "with"
 SEPARATOR = "<SEP>"
@@ -106,4 +106,18 @@ def sample(
         A sentence that describes the transformation.
 
     """
+    # sample a generator
+    if to is None:
+        generator = sample_fragment()()
+        to = generator(fro)
+    else:
+        generator = sample_reaction()()
+
+    # sample a clause
+    clause = sample_clause(to)
+
+    # create a sentence
+    sentence = Sentence(generator, fro, to, clause)
+
+    return sentence
 

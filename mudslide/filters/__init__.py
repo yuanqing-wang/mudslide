@@ -1,1 +1,1 @@
-from .clause import Clause
+from .clause import Clause, sample
