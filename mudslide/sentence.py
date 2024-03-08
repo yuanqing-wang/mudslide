@@ -1,7 +1,7 @@
 from tkinter import SEPARATOR
 from typing import Optional
 from .generators import Generator
-from .generators.atom_based import CremGenerator
+from .generators.fragment_based import CremGenerator
 from .filters import Clause
 
 CONJUNCTION = "with"
@@ -86,3 +86,24 @@ class Sentence(object):
             return self.clause(self.to)
         return True
     
+def sample(
+        fro: str,
+        to: Optional[str] = None,
+):
+    """Sample a sentence. 
+    
+    Parameters
+    ----------
+    to : str
+        The ending molecule.
+
+    fro : Optional[str]
+        The starting molecule. If not given, then it is randomly sampled.
+
+    Returns
+    -------
+    str
+        A sentence that describes the transformation.
+
+    """
+

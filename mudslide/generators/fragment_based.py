@@ -31,7 +31,7 @@ class Grow(CremGenerator):
     
     Examples
     --------
-    >>> from mudslide.generators.atom_based import Grow
+    >>> from mudslide.generators.fragment_based import Grow
     >>> grow = Grow()
     >>> from rdkit import Chem
     >>> mol = Chem.MolFromSmiles("CCO")
@@ -51,7 +51,7 @@ class Mutate(CremGenerator):
 
     Examples
     --------
-    >>> from mudslide.generators.atom_based import Grow
+    >>> from mudslide.generators.fragment_based import Grow
     >>> mutate = Mutate()
     >>> from rdkit import Chem
     >>> mol = Chem.MolFromSmiles("CCO")
@@ -64,3 +64,8 @@ class Mutate(CremGenerator):
         return [
             "Mutate",
         ]
+    
+_all = [
+    Grow,
+    Mutate,
+]

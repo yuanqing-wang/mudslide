@@ -22,6 +22,11 @@ class Property(abc.ABC):
     
     __repr__ = __str__
 
+    @abc.abstractmethod
+    def sample(self) -> bool:
+        """Sample a reasonable property. """
+        raise NotImplementedError
+
 class NumberOfElement(Property):
     """Describe the number of elements in a molecule. 
     
@@ -80,6 +85,9 @@ class NumberOfElement(Property):
             ]
         )
     
+    def sample(self) -> int:
+        return random.randint(0, 10)
+    
 NumberOfCarbons = partial(NumberOfElement, "C")
 NumberOfNitrogens = partial(NumberOfElement, "N")
 NumberOfOxygens = partial(NumberOfElement, "O")
@@ -108,6 +116,20 @@ class NumberOfRings(Property):
     @smilse2mol
     def __call__(self, mol: Chem.Mol) -> bool:
         return Chem.GetSSSR(mol)
+    
+    def sample(self) -> int:
+        return random.randint(0, 10)
 
-
+_all = [
+    NumberOfCarbons,
+    NumberOfNitrogens,
+    NumberOfOxygens,
+    NumberOfFluorines,
+    NumberOfPhosphoruses,
+    NumberOfSulfurs,
+    NumberOfChlorines,
+    NumberOfBromines,
+    NumberOfIodines,
+    NumberOfRings,
+]
 

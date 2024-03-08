@@ -1,3 +1,4 @@
+import random
 from .generator import Generator
 
 class Reaction(Generator):
@@ -8,4 +9,10 @@ class Reaction(Generator):
             "Generate with reactions",
         ]
     
+    def __str__(self):
+        return random.choice(self._str)
+
+_all = [
+    Reaction,
+]
 
