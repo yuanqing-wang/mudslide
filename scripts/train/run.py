@@ -1,24 +1,27 @@
-from pyexpat import model
+from mudslide import data
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
 from torch.utils.data import DataLoader
+from datasets import Dataset
 
 def run(args):
     # load the tokenizer and model
     tokenizer = AutoTokenizer.from_pretrained(args.model)
     tokenizer.add_special_tokens({'sep_token': '<SEP>'})
     tokenizer.add_special_tokens({'pad_token': '<PAD>'})
-    
-    # define a collate function
-    def collate_fn(batch):
-        text = [x["text"] for x in batch]
-        text = tokenizer(text, return_tensors="pt", padding=True)
-        text["labels"] = text["input_ids"].clone()
-        return text
 
-    # create a dataloader
-    from mudslide.data import SentenceDataset
-    dataset = SentenceDataset()
-    dataloader = DataLoader(dataset, batch_size=8, collate_fn=collate_fn)
+    def tokenize_function(examples):
+        output = tokenizer(examples["text"], padding="max_length", truncation=True)
+        output["labels"] = output["input_ids"]
+        return output
+
+    # load the dataset
+    from mudslide.data import create_dataset
+    dataset = create_dataset(size=1000)
+
+    import pandas as pd
+    dataset = pd.DataFrame(dataset, columns=["text"])
+    dataset = Dataset.from_pandas(dataset)
+    dataset = dataset.map(tokenize_function, batched=True)
 
     # load the model
     model = AutoModelForCausalLM.from_pretrained(args.model)
@@ -26,7 +29,7 @@ def run(args):
     # define the training arguments
     training_args = TrainingArguments(
         output_dir="./results",
-        per_device_train_batch_size=8,
+        per_device_train_batch_size=4,
         max_steps=10000,
         save_total_limit=2,
         # fp16=True,
@@ -35,7 +38,7 @@ def run(args):
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=dataloader,
+        train_dataset=dataset,
         tokenizer=tokenizer,
     )
 

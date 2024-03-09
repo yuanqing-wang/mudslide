@@ -26,26 +26,11 @@ def sample_sentence(dataset):
     fro, to = process_single(record)
     return sample_sentence_from_record(fro, to)
 
-def data_generator():
-    dataset = get_dataset()
-    while True:
-        yield {"text": str(sample_sentence(dataset))}
-
-class SentenceDataset(IterableDataset):
-    def __init__(self, dataset=None):
-        if dataset is None:
-            dataset = data_generator()
-        self.dataset = dataset
-
-    def __iter__(self):
-        return iter(self.dataset)
-    
-    def __len__(self):
-        return 99999
-    
-    
-
-
+def create_dataset(dataset=None, size=10000):
+    if dataset is None:
+        dataset = get_dataset()
+    sentences = [str(sample_sentence(dataset)) for _ in range(size)]
+    return sentences
 
 
 
