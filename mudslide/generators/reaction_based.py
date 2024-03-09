@@ -8,6 +8,7 @@ class Reaction(Generator):
         return [
             "React",
             "Generate with reactions",
+            "Get analogs of",
         ]
     
     def __str__(self):
