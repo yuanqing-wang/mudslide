@@ -134,11 +134,14 @@ def sample(mol, max_iter: int=10, max_samples: int=5) -> Clause:
     max_samples : int
         The maximum number of clauses to be sampled.
     """
+    num_samples = random.randint(1, max_samples)
     clauses = []
-    for _ in range(max_samples):
+    for _ in range(num_samples):
         clause = sample_once(mol, max_iter)
         if clause is not None:
             clauses.append(clause)
+    if len(clauses) == 0:
+        return None
     return AndClause(clauses)
 
 

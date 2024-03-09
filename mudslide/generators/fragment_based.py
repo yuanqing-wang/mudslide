@@ -2,6 +2,8 @@ import random
 from typing import Optional
 import os
 from pathlib import Path
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
 from crem import crem
 import requests
 from .generator import Generator
@@ -63,7 +65,9 @@ class Mutate(CremGenerator):
     """
     @smilse2mol
     def __call__(self, mol) -> str:
-        return random.choice(crem.mutate_mol2(mol, db_name=self.db))
+        mutated = crem.mutate_mol2(mol, db_name=self.db)
+        if len(mutated):
+            return random.choice(mutated)
     
     @property
     def _str(self):
