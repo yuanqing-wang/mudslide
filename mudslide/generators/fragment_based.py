@@ -18,6 +18,7 @@ DB_NAME = os.path.join(
 def _get_db():
     if not os.path.exists(DB_NAME):
         r = requests.get(DB_URL)
+        os.mkdir(os.path.dirname(DB_NAME))
         with open(f"{DB_NAME}.gz", "wb") as f:
             f.write(r.content)
         os.system(f"gzip -dk {DB_NAME}.gz")

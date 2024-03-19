@@ -161,3 +161,8 @@ cython_debug/
 
 *.db
 *.db.gz
+*.csv
+*.json
+*.bin
+*.pt
+*.safetensors

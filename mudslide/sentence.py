@@ -7,6 +7,7 @@ from .filters import Clause, sample as sample_clause
 CONJUNCTION = "with"
 SEPARATOR = "<SEP>"
 
+
 def combine(
         generator: str,
         fro: str,

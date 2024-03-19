@@ -14,17 +14,19 @@ def run(args):
         output["labels"] = output["input_ids"]
         return output
 
-    # load the dataset
-    from mudslide.data import create_dataset
-    dataset = create_dataset(size=1000)
-
     import pandas as pd
-    dataset = pd.DataFrame(dataset, columns=["text"])
-    dataset = Dataset.from_pandas(dataset)
+    import os
+    import glob
+    texts = open(args.path, "r").readlines()[:971809]
+    texts = [{"text": text} for text in texts] 
+
+    # print(texts[:10])
+    dataset = Dataset.from_list(texts)
     dataset = dataset.map(tokenize_function, batched=True)
 
     # load the model
     model = AutoModelForCausalLM.from_pretrained(args.model)
+    model.resize_token_embeddings(len(tokenizer))
 
     # define the training arguments
     training_args = TrainingArguments(
@@ -47,6 +49,7 @@ def run(args):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
+    parser.add_argument("--path", type=str, default="/scratch/yw8052/mudslide/scripts/_data/text.csv")
     parser.add_argument("--model", type=str, default="gpt2")
     args = parser.parse_args()
     run(args)
