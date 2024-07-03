@@ -113,21 +113,23 @@ class PeriodicTorsionForce(NamedTuple):
         X: jnp.ndarray,
     ):
         """Compute the energy."""
-        # Compute the vectors between the particles.
-        r12 = X[self.particle2] - X[self.particle1]
-        r23 = X[self.particle3] - X[self.particle2]
-        r34 = X[self.particle4] - X[self.particle3]
+        # compute displacements 0->1, 2->1, 2->3
+        r01 = X[self.particle2] - X[self.particle1]
+        r21 = X[self.particle2] - X[self.particle3]
+        r23 = X[self.particle4] - X[self.particle3]
 
-        # Compute the normal vectors.
-        left = jnp.cross(r12, r23)
-        right = jnp.cross(r23, r34)
+        # compute normal planes
+        n1 = jnp.cross(r01, r21)
+        n2 = jnp.cross(r21, r23)
 
-        # Compute the torsion angle.
-        phi = jnp.atan2(
-            jnp.linalg.norm(jnp.cross(left, right), axis=-1),
-            jnp.sum(left * right, axis=-1),
-        )
+        rkj_normed = r21 / jnp.linalg.norm(r21, axis=-1, keepdims=True)
 
-        # Compute the energy.
+        y = jnp.sum(jnp.cross(n1, n2) * rkj_normed, axis=-1)
+        x = jnp.sum(n1 * n2, axis=-1)
+
+        # choose quadrant correctly
+        phi = jnp.atan2(y, x)
+
+        # compute energy
         energy = self.k * (1 + jnp.cos(self.periodicity * phi - self.phase))
         return energy

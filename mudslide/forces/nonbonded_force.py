@@ -18,3 +18,6 @@ class NonbondedForce(NamedTuple):
 
     if sigma is None:
         sigma = jnp.array([], dtype=jnp.float64)
+    
+    if epsilon is None:
+        epsilon = jnp.array([], dtype=jnp.float64)
