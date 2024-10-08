@@ -3,7 +3,6 @@ import jax.numpy as jnp
 from typing import Optional, NamedTuple
 from .. import unit
 
-
 class HarmonicBondForce(NamedTuple):
     """Harmonic bond force."""
 
@@ -23,7 +22,7 @@ class HarmonicBondForce(NamedTuple):
 
     if k is None:
         k = jnp.array([], dtype=jnp.float64)
-
+        
     @classmethod
     def from_openmm(cls, force):
         """Initialize the force from an OpenMM HarmonicBondForce object."""
@@ -50,16 +49,16 @@ class HarmonicBondForce(NamedTuple):
             self.particle1, self.particle2, self.length, self.k
         ):
             force.addBond(
-                int(particle1), int(particle2), float(length), float(k)
+                int(particle1), 
+                int(particle2), 
+                float(length) * unit.DISTANCE, 
+                float(k) * unit.ENERGY / unit.DISTANCE**2,
             )
         return force
 
-    def energy(
-        self,
-        X: jnp.ndarray,
-    ):
+    def __call__(self, X: jnp.ndarray):
         X1 = X[self.particle1]
         X2 = X[self.particle2]
         deltaX = X2 - X1
-        distance = (deltaX**2).sum(-1)
+        distance = (deltaX **2 ).sum(-1) ** 0.5
         return 0.5 * self.k * (distance - self.length) ** 2
