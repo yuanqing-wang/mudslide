@@ -38,7 +38,7 @@ def test_openmm_consistency():
     context = mm.Context(system, integrator)
     context.setPositions(X * mm.unit.nanometer)
     context.setVelocities(V * mm.unit.nanometer/mm.unit.picosecond)
-    integrator.step(1)
+    integrator.step(10)
     X_openmm = context.getState(getPositions=True).getPositions(asNumpy=True) / mm.unit.nanometer
     V_openmm = context.getState(getVelocities=True).getVelocities(asNumpy=True) / mm.unit.nanometer*mm.unit.picosecond
     
@@ -56,7 +56,7 @@ def test_openmm_consistency():
     system = System(masses=jnp.array([1.0, 1.0]), forces=[force])
     integrator = VelocityVerletIntegrator(timestep=0.1)
     state = State(jnp.array(X), jnp.array(V))
-    state = integrator(1, state, system, key=jax.random.PRNGKey(0))
+    state = integrator(10, state, system, key=jax.random.PRNGKey(0))
     X_mudslide, V_mudslide = state
     
     print((V_mudslide - V) / (V_openmm - V))

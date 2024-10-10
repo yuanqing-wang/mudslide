@@ -1,37 +1,113 @@
-def test_harmonic_bond_force_energy():
-    import openmm
-    import jax.numpy as jnp
-    _force = openmm.HarmonicBondForce()
-    _force.addBond(0, 1, 2.0, 1.0)
-    from mudslide.forces.harmonic_bond_force import HarmonicBondForce
-    force = HarmonicBondForce.from_openmm(_force)
-    X = jnp.array([[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
-    energy = force(X)
-    assert energy == 0.5
+def test_bond_system():
+    import openmm as mm
+    import numpy as onp
+    
+    openmm_system = mm.System()
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    force = mm.HarmonicBondForce()
+    force.addBond(0, 1.0, 0.0, 1.0)
+    openmm_system.addForce(force)
+    
+    
+    from mudslide.system import System
+    system = System.from_openmm(openmm_system)
+    
+    X = onp.random.randn(2, 3)
+    mudslide_energy = system(X)
+    
+    from openmmtools.integrators import DummyIntegrator
+    integrator = DummyIntegrator()
+    context = mm.Context(openmm_system, integrator)
+    context.setPositions(X)
+    state = context.getState(getEnergy=True)
+    openmm_energy = state.getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+    
+    assert onp.allclose(mudslide_energy, openmm_energy)
+    
+def test_angle_system():
+    import openmm as mm
+    import numpy as onp
+    
+    openmm_system = mm.System()
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    force = mm.HarmonicAngleForce()
+    force.addAngle(0, 1, 2, 0.0, 1.0)
+    openmm_system.addForce(force)
+    
+    from mudslide.system import System
+    system = System.from_openmm(openmm_system)
+    
+    X = onp.random.randn(3, 3)
+    mudslide_energy = system(X)
+    
+    from openmmtools.integrators import DummyIntegrator
+    integrator = DummyIntegrator()
+    context = mm.Context(openmm_system, integrator)
+    context.setPositions(X)
+    state = context.getState(getEnergy=True)
+    openmm_energy = state.getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+    
+    assert onp.allclose(mudslide_energy, openmm_energy)
+    
+def test_torsion_system():
+    import openmm as mm
+    import numpy as onp
+    
+    openmm_system = mm.System()
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    force = mm.PeriodicTorsionForce()
+    force.addTorsion(0, 1, 2, 3, periodicity=1, phase=0.0, k=1.0)
+    openmm_system.addForce(force)
+    
+    from mudslide.system import System
+    system = System.from_openmm(openmm_system)
+    X = onp.random.randn(4, 3)
+    mudslide_energy = system(X)
+    
+    from openmmtools.integrators import DummyIntegrator
+    integrator = DummyIntegrator()
+    context = mm.Context(openmm_system, integrator)
+    context.setPositions(X)
+    state = context.getState(getEnergy=True)
+    openmm_energy = state.getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+    
+    assert onp.allclose(mudslide_energy, openmm_energy)
+    
+def test_nonbonded_system():
+    import openmm as mm
+    import numpy as onp
+    
+    openmm_system = mm.System()
+    openmm_system.addParticle(1.0)
+    openmm_system.addParticle(1.0)
+    force = mm.NonbondedForce()
+    force.addParticle(0.5, 1.0, 1.0)
+    force.addParticle(0.5, 1.0, 1.0)
+    force.setNonbondedMethod(mm.NonbondedForce.NoCutoff)
+    openmm_system.addForce(force)
+    
+    from mudslide.system import System
+    system = System.from_openmm(openmm_system)
+    X = onp.random.randn(2, 3)
+    mudslide_energy = system(X)
+    
+    from openmmtools.integrators import DummyIntegrator
+    integrator = DummyIntegrator()
+    context = mm.Context(openmm_system, integrator)
+    context.setPositions(X)
+    state = context.getState(getEnergy=True)
+    openmm_energy = state.getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+    
 
-# def test_harmonic_angle_force_energy():
-#     import openmm
-#     import jax.numpy as jnp
-#     import math
-#     _force = openmm.HarmonicAngleForce()
-#     _force.addAngle(0, 1, 2, math.pi / 4.0, 1.0)
-#     from mudslide.forces.harmonic_angle_force import HarmonicAngleForce
-#     force = HarmonicAngleForce.from_openmm(_force)
-#     X = jnp.array([[0.0, 1.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]])
-#     energy = force.energy(X)
-#     assert jnp.allclose(energy, 0.5 * (math.pi / 4.0) ** 2)
+    assert onp.allclose(mudslide_energy, openmm_energy)
 
-# def test_periodic_torsion_force_energy():
-#     import openmm
-#     import jax.numpy as jnp
-#     import math
-#     _force = openmm.PeriodicTorsionForce()
-#     _force.addTorsion(0, 1, 2, 3, 1, math.pi / 4.0, 1.0)
-#     from mudslide.forces.periodic_torsion_force import PeriodicTorsionForce
-#     force = PeriodicTorsionForce.from_openmm(_force)
-#     X = jnp.array([[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0]])
-#     energy = force.energy(X)
-#     assert jnp.allclose(
-#         energy,
-#         (1.0 + jnp.cos(jnp.pi / 2.0 - math.pi / 4.0)),
-#     )
+    
+    
+    
+    

@@ -66,7 +66,7 @@ class HarmonicAngleForce(NamedTuple):
             )
         return force
 
-    def energy(
+    def __call__(
         self,
         X: jnp.ndarray,
     ):

@@ -1,7 +1,12 @@
 import jax
 from typing import NamedTuple, Optional
 from . import unit
-from .forces.harmonic_bond_force import HarmonicBondForce
+from .forces import (
+    HarmonicBondForce,
+    HarmonicAngleForce,
+    PeriodicTorsionForce,
+    NonbondedForce,
+)
 
 class System(NamedTuple):
     masses: jax.numpy.ndarray
@@ -26,8 +31,13 @@ class System(NamedTuple):
         forces = []
         for idx in range(system.getNumForces()):
             force = system.getForce(idx)
-            print(force)
             if force.__class__.__name__ == "HarmonicBondForce":
                 forces.append(HarmonicBondForce.from_openmm(force))
-        
+            elif force.__class__.__name__ == "HarmonicAngleForce":
+                forces.append(HarmonicAngleForce.from_openmm(force))
+            elif force.__class__.__name__ == "PeriodicTorsionForce":
+                forces.append(PeriodicTorsionForce.from_openmm(force))
+            elif force.__class__.__name__ == "NonbondedForce":
+                forces.append(NonbondedForce.from_openmm(force))
+            
         return cls(masses=jax.numpy.array(masses, dtype=jax.numpy.float64), forces=forces)
